@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>IoTtalk Homepage</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename = 'font.css') }}">
+</head>
+<body>
+    <h4 style="margin-bottom:0;">IoTtalk:</h4>
+<div>
+    <ul style="margin:0;">
+      <li><a href="#" onclick="window.open('https://1ccm.iottalk.tw/connection', '_blank');">Project</a></li>
+      <li><a href="#" onclick="window.open('https://1ccm.iottalk.tw/dfm', '_blank');"
+  >Device Feature Management</a></li>
+      <!--      <li><a href="#" onclick="window.open('http://'+location.hostname+':7788/download_feature', '_blank');">Download Device Feature</a></li>-->
+      <li><a href="#" onclick="window.open(window.location.origin+'/list_all', '_blank');"
+  >Device Monitor</a></li>
+      <li><a href="#" onclick="window.open('https://1ccm.iottalk.tw/projectMgr', '_blank');">Project Management </a></li>
+    </ul>
+  </div>
+
+  <div>
+  <h4 style="margin-bottom:0;">Cyber Device List:</h4>
+    <ul style="margin:0;">
+      {% for da_name in js_da_list %}
+      <li><a href="/da/{{da_name}}/index.html" target='_blank'>{{da_name}}</a></li>
+      {% endfor %}
+
+    </ul>
+
+<div style="background:white;height:0.25rem;"></div>
+<div style="background:darkgreen;height:0.25rem;"></div>
+<span
+   style="color:#FF3836;font-size:1.25rem;"> &nbsp; [ df . {{ dfResult }}</span>
+<div style="background:red;height:0.25rem;"></div>
+
+  <h4 style="margin-bottom:0;">VPython List:</h4>
+    <ul style="margin:0;">
+    <li><a href="/da/vp/web_py_index.html#3DMotion1" target='_blank'>3DMotion1</a></li>
+      
+      <li><a href="/da/vp/web_py_index.html#3DMotion2" target='_blank'>3DMotion2</a></li>
+      {% for da_name in vp_da_list %}
+      <li><a href="/da/vp/web_py_index.html#{{da_name}}" target='_blank'>{{da_name}}</a></li>
+      {% endfor %}
+      <li><a href="/da/vp/web_py_index.html#Ball-throw1" target='_blank'>Ball-throw1</a></li>
+      
+      <li><a href="/da/vp/web_py_index.html#Ball-throw2" target='_blank'>Ball-throw2</a></li>
+      
+      <li><a href="/da/vp/web_py_index.html#Collision1" target='_blank'>Collision1</a></li>
+      
+      <li><a href="/da/vp/web_py_index.html#Collision2" target='_blank'>Collision2</a></li>
+
+      <li><a href="/da/vp/web_py_index.html#Ball-throw1" target='_blank'>Ball-throw1</a></li>
+    </ul>
+<div style="background:white;height:0.25rem;"></div>
+<div style="background:darkgreen;height:0.25rem;"></div>
+<span
+ style="color:#283236;font-size:1.25rem;"> &nbsp; [ top  {{ topResult | safe }}</span>
+<div style="background:red;height:0.25rem;"></div>
+<div style="background:lightYellow;font-size:1.35rem;color:darkGreen;width:68vw;">
+======<strong> Web Application vs. Web Service
+<p style="margin-left:2vw;">
+A Web Application is meant for humans to read, 
+while a Web Service is meant for computers to read. 
+Web Application is a complete Application with a Graphical User Interface (GUI), 
+however, web services do not necessarily have a user interface since it is used as 
+a component in an application.
+</p>
+<p style="background:lightgreen;">
+Note that
+flask's template engine (jinja2) 
+assumes that input inside of { { } } is unsafe and will not allow js or html 
+to be rendered inside of it.
+</p>
+<br><br>
+&nbsp;o <a target=_blank
+    href="https://medium.com/seaniap/python-web-flask-jinja2樣版引擎的使用-f71305e2da34"
+  ><span style="color:blue;background:yellow;font-size:1.75rem;"
+  >Python Web Flask — Jinja2樣版引擎的使用</span></a>
+<br>
+oo <a target=_blank
+    href="https://ithelp.ithome.com.tw/articles/10258223"
+  ><span style="color:blue;background:CYAN;font-size:1.35rem;"
+  >【Python Flask 入門指南】輕量級網頁框架教學 | 5 行程式碼 x 架設網站</span></a>
+<br>
+<br>
+</strong>
+</div>
+<br>
+  </div>
+</body>
+</html>

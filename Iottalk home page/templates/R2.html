@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html>
+<head>
+ <script>
+   var dfName = 'RN-Float';
+   var iottalk_url = '' ;
+    iottalk_url = window.location.origin;  // 自動取得 where this page from
+   // 如果抓回自己電腦, 須指定 IoTTalk server URL
+   iottalk_url = "https://1.iottalk.tw";  // for static URL
+ </script>
+ <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+    <meta charset="utf-8">
+    <title>Random Number Generator</title>
+    <style type="text/css">
+        body {
+            width: 100%;
+            height: 100%;
+            font-family: monospace, arial, sans-serif;
+            padding: 0;
+            margin: 0;
+            background: #eee;
+        }
+        main {
+            position: relative;
+            display: block;
+            width: 80%;
+            max-width: 500px;
+            margin: 4em auto;
+        }
+        #sim-pattern {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+<strong style="color:red;font-size:2.5rem;font-family:仿宋體;">
+   這是 RandNum 替代版; DM 也是 RandNum</strong>
+
+    <main>
+        <div id="container"></div>
+        <button id="Add" type="button" class="btn btn-success btn-lg btn-block">
+            Add random number generator
+        </button>
+<span style="color:red;font-size:2rem;">
+   這是 RandNum 替代版; DM 也是 RandNum</span>
+<br>
+<strong id="ggyy" style="color:blue;font-size:2.5rem;">
+   IDF name is</strong>
+<br>
+ <strong  style="color:darkred;font-size:1.95rem;background:yellow;">
+   按滑鼠右鍵選 View Source/檢視原始碼</strong>
+<br>
+ <strong  style="color:darkgreen;font-size:1.75rem;">
+   按 F12 或滑鼠右鍵選 檢查/Inspect 進入開發者模式;
+   <br> &nbsp; &nbsp; 然後 點 Console 看看然後點 Network</strong>
+    </main>
+
+    <div id="sim-pattern">
+        <section class="panel panel-default">
+            <div class="panel-heading">
+                <h3 role="mac" class="panel-title">Panel title</h3>
+            </div>
+            <div class="panel-body form-horizontal">
+                <div class="form-group">
+                    <label class="col-sm-2 control-label">Period</label>
+                    <div class="col-sm-10">
+                        <input role="period" type="number" class="form-control" value="250">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-sm-2 control-label">Log</label>
+                    <div class="col-sm-10">
+                        <input role="knob" type="text" value="0">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-sm-offset-2 col-sm-10">
+                        <button role="remove" class="btn btn-danger">Remove</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+<!------------------------------------------------------------>
+<!----  script 
+  src="include/jquery.min.js"
+ // 
+  src="https://code.jquery.com/jquery-3.7.1.min.js"
+  >
+ also See  https://cdnjs.com/libraries/jQuery-Knob
+ old jquery knob:
+   https://cdn.jsdelivr.net/npm/jquery-knob@1.2.11/dist/jquery.knob.min.js
+   https://plugins.jquery.com/knob
+ iottalk iottalk 121200 Oct  5  2018 bootstrap.min.css
+ iottalk iottalk  10805 Oct  5  2018 jquery.knob.min.js
+ iottalk iottalk  87533 Sep  7  2023 jquery.min.js
+ </script>
+--------->
+
+    <link rel="stylesheet" type="text/css" 
+ href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap.min.css">
+
+<script 
+ src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+
+<script 
+ src="https://cdnjs.cloudflare.com/ajax/libs/jQuery-Knob/1.2.13/jquery.knob.min.js" 
+ integrity="sha512-NhRZzPdzMOMf005Xmd4JonwPftz4Pe99mRVcFeRDcdCtfjv46zPIi/7ZKScbpHD/V0HB1Eb+ZWigMqw94VUVaw==" 
+ crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+
+    <script type="text/javascript">
+        // Patch
+        (function() {
+            window.requestAnimationFrame = window.requestAnimationFrame ||
+                window.webkitRequestAnimationFrame ||
+                window.mozRequestAnimationFrame ||
+                window.oRequestAnimationFrame ||
+                window.msRequestAnimationFrame ||
+                function(callback, element) {
+                    window.setTimeout(callback, 1000/60);
+                };
+        })();
+    </script>
+    <script type="text/javascript">
+        // Shared variables
+        var attachedSim = {};
+
+ document.getElementById("ggyy").innerHTML = "IDF name is " + dfName;
+
+        // Functions
+        function registerSim(mac) {
+            var profile = {
+                'd_name': mac,
+                'dm_name': 'RandNum',
+                'is_sim': false,
+                'df_list': [ dfName ],
+            };
+            $.ajax({
+                'url': iottalk_url + '/'+mac,
+                'contentType': "application/json; charset=utf-8",
+                'method': 'POST',
+                'data': JSON.stringify({'profile': profile}),
+            }).fail(function(msg) {
+                console.error('Fail to register due to: ', msg);
+            }).done(function(ret) {
+                console.log('Successfully registered', mac);
+                console.log('df Name is ', dfName);
+                console.log('iottalk_url is ', iottalk_url);
+                attachedSim[mac] = 0.0;
+                var sim = $('#sim-pattern').children().clone().hide().appendTo('#container');
+                sim.attr('role', mac);
+                sim.find('[role=mac]').text(mac);
+                sim.find('[role=period]').change(function() {
+                    if( $(this).val() < 100 )
+                        $(this).val(100);
+                });
+                sim.find('[role=knob]').knob({
+                    'min': 0,
+                    'max': 1,
+                    'step': 0.01,
+                    'angleOffset': -125,
+                    'angleArc': 250,
+                    'readOnly': true,
+                    'displayPrevious': true,
+                });
+                sim.find('[role=remove]').attr('data-mac', mac).click(function() {
+                    detachOneSim($(this).attr('data-mac'));
+                });
+                sim.slideDown(300);
+                $('#Add').removeAttr('disabled');
+            });
+        }
+
+        function detachOneSim(mac) {
+            $('[role='+mac+']').slideUp(300);
+            $.ajax({
+                'url': iottalk_url + '/'+mac,
+                'method': 'DELETE',
+            }).fail(function(msg) {
+                console.error('Fail to detach one due to: ', msg);
+            }).done(function(ret) {
+                console.log('Successfully detach', mac);
+                delete attachedSim[mac];
+                setTimeout(function() {
+                    $('[role='+mac+']').remove();
+                }, 300);
+            });
+        }
+
+        function detachAllSim() {
+            var macs = Object.keys(attachedSim);
+            for(var i=0; i<macs.length; ++i)
+                $.ajax({
+                    'url': iottalk_url + '/'+macs[i],
+                    'method': 'DELETE',
+                });
+        }
+
+        function addSim() {
+            lock = true;
+            $('#Add').attr('disabled', 'disabled');
+            $.ajax({
+                'url': iottalk_url + '/tree',
+                'method': 'GET',
+                'cache': false,
+            }).fail(function(msg) {
+                console.error('Fail to get /tree due to: ', msg);
+            }).done(function(ret) {
+                var idx = 0;
+                while( ++idx<10000 && ret['RNG'+idx] )
+                    ;
+                registerSim('RNG'+idx);
+            });
+        }
+
+        function updateSim(mac) {
+            var val = Math.random();
+            $('[role='+mac+'] [role=knob]').val(val).trigger('change');
+            $.ajax({
+                'url': iottalk_url + '/'+mac+'/' + dfName,
+                'method': "PUT",
+                'contentType': "application/json; charset=utf-8",
+                'data': JSON.stringify({'data': [val]}),
+            }).fail(function(msg) {
+                console.log('Fail to update due to:', msg);
+            });
+        }
+
+
+        // Simulate
+        function simulator() {
+            var macs = Object.keys(attachedSim);
+            for(var i=0; i<macs.length; ++i) {
+                var period = parseFloat($('[role='+macs[i]+'] [role=period]').val());
+                if( period < 100 )
+                    period = 100;
+                if( Date.now()-attachedSim[macs[i]] > period ) {
+                    updateSim(macs[i]);
+                    attachedSim[macs[i]] = Date.now();
+                }
+            }
+            requestAnimationFrame(simulator);
+        }
+        requestAnimationFrame(simulator);
+
+
+        // Binding
+        $('#Add').click(addSim);
+        window.onunload = detachAllSim;
+        window.onbeforeunload = detachAllSim;
+        window.onclose = detachAllSim;
+        window.onpagehide = detachAllSim;
+
+        // First time call
+        addSim();
+    </script>
+</body>
+</html>
+<!------------------------------------------------------------>
+<!----  script 
+  src="include/jquery.min.js"
+ // 
+  src="https://code.jquery.com/jquery-3.7.1.min.js"
+  >
+ also See  https://cdnjs.com/libraries/jQuery-Knob
+ old jquery knob:
+   https://cdn.jsdelivr.net/npm/jquery-knob@1.2.11/dist/jquery.knob.min.js
+   https://plugins.jquery.com/knob
+ iottalk iottalk 121200 Oct  5  2018 bootstrap.min.css
+ iottalk iottalk  10805 Oct  5  2018 jquery.knob.min.js
+ iottalk iottalk  87533 Sep  7  2023 jquery.min.js
+ </script>
+--------->
+
+    <link rel="stylesheet" type="text/css" 
+ href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap.min.css">
+
+<script 
+ src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+
+<script 
+ src="https://cdnjs.cloudflare.com/ajax/libs/jQuery-Knob/1.2.13/jquery.knob.min.js" 
+ integrity="sha512-NhRZzPdzMOMf005Xmd4JonwPftz4Pe99mRVcFeRDcdCtfjv46zPIi/7ZKScbpHD/V0HB1Eb+ZWigMqw94VUVaw==" 
+ crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+
+    <script type="text/javascript">
+        // Patch
+        (function() {
+            window.requestAnimationFrame = window.requestAnimationFrame ||
+                window.webkitRequestAnimationFrame ||
+                window.mozRequestAnimationFrame ||
+                window.oRequestAnimationFrame ||
+                window.msRequestAnimationFrame ||
+                function(callback, element) {
+                    window.setTimeout(callback, 1000/60);
+                };
+        })();
+    </script>
+    <script type="text/javascript">
+        // Shared variables
+        var attachedSim = {};
+
+ document.getElementById("ggyy").innerHTML = "IDF name is " + dfName;
+
+        // Functions
+        function registerSim(mac) {
+            var profile = {
+                'd_name': mac,
+                'dm_name': 'RandNum',
+                'is_sim': false,
+                'df_list': [ dfName ],
+            };
+            $.ajax({
+                'url': iottalk_url + '/'+mac,
+                'contentType': "application/json; charset=utf-8",
+                'method': 'POST',
+                'data': JSON.stringify({'profile': profile}),
+            }).fail(function(msg) {
+                console.error('Fail to register due to: ', msg);
+            }).done(function(ret) {
+                console.log('Successfully registered', mac);
+                console.log('df Name is ', dfName);
+                console.log('iottalk_url is ', iottalk_url);
+                attachedSim[mac] = 0.0;
+                var sim = $('#sim-pattern').children().clone().hide().appendTo('#container');
+                sim.attr('role', mac);
+                sim.find('[role=mac]').text(mac);
+                sim.find('[role=period]').change(function() {
+                    if( $(this).val() < 100 )
+                        $(this).val(100);
+                });
+                sim.find('[role=knob]').knob({
+                    'min': 0,
+                    'max': 1,
+                    'step': 0.01,
+                    'angleOffset': -125,
+                    'angleArc': 250,
+                    'readOnly': true,
+                    'displayPrevious': true,
+                });
+                sim.find('[role=remove]').attr('data-mac', mac).click(function() {
+                    detachOneSim($(this).attr('data-mac'));
+                });
+                sim.slideDown(300);
+                $('#Add').removeAttr('disabled');
+            });
+        }
+
+        function detachOneSim(mac) {
+            $('[role='+mac+']').slideUp(300);
+            $.ajax({
+                'url': iottalk_url + '/'+mac,
+                'method': 'DELETE',
+            }).fail(function(msg) {
+                console.error('Fail to detach one due to: ', msg);
+            }).done(function(ret) {
+                console.log('Successfully detach', mac);
+                delete attachedSim[mac];
+                setTimeout(function() {
+                    $('[role='+mac+']').remove();
+                }, 300);
+            });
+        }
+
+        function detachAllSim() {
+            var macs = Object.keys(attachedSim);
+            for(var i=0; i<macs.length; ++i)
+                $.ajax({
+                    'url': iottalk_url + '/'+macs[i],
+                    'method': 'DELETE',
+                });
+        }
+
+        function addSim() {
+            lock = true;
+            $('#Add').attr('disabled', 'disabled');
+            $.ajax({
+                'url': iottalk_url + '/tree',
+                'method': 'GET',
+                'cache': false,
+            }).fail(function(msg) {
+                console.error('Fail to get /tree due to: ', msg);
+            }).done(function(ret) {
+                var idx = 0;
+                while( ++idx<10000 && ret['RNG'+idx] )
+                    ;
+                registerSim('RNG'+idx);
+            });
+        }
+
+        function updateSim(mac) {
+            var val = Math.random();
+            $('[role='+mac+'] [role=knob]').val(val).trigger('change');
+            $.ajax({
+                'url': iottalk_url + '/'+mac+'/' + dfName,
+                'method': "PUT",
+                'contentType': "application/json; charset=utf-8",
+                'data': JSON.stringify({'data': [val]}),
+            }).fail(function(msg) {
+                console.log('Fail to update due to:', msg);
+            });
+        }
+
+
+        // Simulate
+        function simulator() {
+            var macs = Object.keys(attachedSim);
+            for(var i=0; i<macs.length; ++i) {
+                var period = parseFloat($('[role='+macs[i]+'] [role=period]').val());
+                if( period < 100 )
+                    period = 100;
+                if( Date.now()-attachedSim[macs[i]] > period ) {
+                    updateSim(macs[i]);
+                    attachedSim[macs[i]] = Date.now();
+                }
+            }
+            requestAnimationFrame(simulator);
+        }
+        requestAnimationFrame(simulator);
+
+
+        // Binding
+        $('#Add').click(addSim);
+        window.onunload = detachAllSim;
+        window.onbeforeunload = detachAllSim;
+        window.onclose = detachAllSim;
+        window.onpagehide = detachAllSim;
+
+        // First time call
+        addSim();
+    </script>
+</body>
+</html>
